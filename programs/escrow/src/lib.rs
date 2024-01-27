@@ -14,7 +14,7 @@ declare_id!("8poGjoAGyUVK6Ups3yaUBxFxXUYXmhyBo92qxQRkyUtV");
 
 #[program]
 pub mod escrow {
-    use self::pda::find_escrow_house_fee_pda;
+    use self::{pda::find_escrow_house_fee_pda, utils::pay_escrow_house_fees};
 
     use super::*;
 
@@ -98,11 +98,12 @@ pub mod escrow {
         Ok(())
     }
 
-    pub fn withdraw_from_fee_account(ctx: Context<WithdrawFromFee>, amount: u64) -> Result<()> {
-        let escrow_house_fee_account = &ctx.accounts.escrow_house_fee_account;
-        let fee_withdrawal_destination = &ctx.accounts.fee_withdrawal_destination;
+    pub fn withdraw_from_fee_account(ctx: Context<WithdrawFromFee>, _amount: u64) -> Result<()> {
         let escrow_house = &ctx.accounts.escrow_house;
         let system_program = &ctx.accounts.system_program;
+        let token_program = &ctx.accounts.token_program;
+        let escrow_house_treasury = &ctx.accounts.escrow_house_treasury;
+        let escrow_payment_account = &ctx.accounts.escrow_payment_account;
 
         let escrow_house_key = escrow_house.key();
 
@@ -113,20 +114,16 @@ pub mod escrow {
             &[escrow_house.fee_payer_bump],
         ];
 
-        // send specified lamports to the fee withdrawal accout
-        invoke_signed(
-            &system_instruction::transfer(
-                &escrow_house_fee_account.key(),
-                &fee_withdrawal_destination.key(),
-                amount,
-            ),
-            &[
-                escrow_house_fee_account.to_account_info(),
-                fee_withdrawal_destination.to_account_info(),
-                system_program.to_account_info(),
-            ],
-            &[&seeds],
-        )?;
+        let _ = pay_escrow_house_fees(
+            escrow_house,
+            escrow_house_treasury,
+            escrow_payment_account,
+            token_program,
+            system_program,
+            &seeds,
+            1,
+            true,
+        );
 
         Ok(())
     }
@@ -141,7 +138,7 @@ pub mod escrow {
 
         offer.price = offer_price;
 
-        let (escrow_fee, num) = find_escrow_house_fee_pda(escrow_house.key);
+        let (escrow_fee, _num) = find_escrow_house_fee_pda(escrow_house.key);
         let seeds = [&ESCROW_PDA_SEED[..]];
 
         // setup an offer structure to save the details on each offer,
@@ -256,6 +253,8 @@ pub struct WithdrawFromFee<'info> {
     /// Escrow  instance fee account.
     #[account(mut, seeds=[PREFIX.as_bytes(), escrow_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=escrow_house.fee_payer_bump)]
     pub escrow_house_fee_account: UncheckedAccount<'info>,
+    pub escrow_house_treasury: UncheckedAccount<'info>,
+    pub escrow_payment_account: UncheckedAccount<'info>,
 
     /// Escrow  instance PDA account.
     #[account(mut, seeds=[PREFIX.as_bytes(), escrow_house.creator.as_ref()], bump=escrow_house.bump, has_one=authority, has_one=fee_withdrawal_destination, has_one=escrow_house_fee_account)]
