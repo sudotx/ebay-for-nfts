@@ -131,21 +131,21 @@ pub mod escrow {
         Ok(())
     }
 
-    pub fn create_offer(ctx: Context<CreateOffer>, price: u32, quantity: u32) -> Result<()> {
-        let listing_mint = &ctx.accounts.listing_mint;
+    pub fn create_offer(ctx: Context<CreateOffer>, price: u32) -> Result<()> {
         let offer_owner = &ctx.accounts.owner;
-        let offer_seller = &ctx.accounts.seller;
         let system_program = &ctx.accounts.system_program;
-        let token_program = &ctx.accounts.token_program;
         let offer_price = price;
-        let offer_quantity = quantity;
         let escrow_house = &ctx.accounts.escrow_house;
         let fee_dest = &ctx.accounts.fee_destination;
+        let offer = &mut ctx.accounts.offer;
+
+        offer.price = offer_price;
 
         let (escrow_fee, num) = find_escrow_house_fee_pda(escrow_house.key);
         let seeds = [&ESCROW_PDA_SEED[..]];
 
         // setup an offer structure to save the details on each offer,
+
         // create an offer account
 
         // transfer fee for creating offer to fee destination
@@ -163,11 +163,6 @@ pub mod escrow {
     }
 
     pub fn accept_offer(ctx: Context<AcceptOffer>) -> Result<()> {
-        let offer_authority = &ctx.accounts.authority;
-        let listing_mint = &ctx.accounts.mint;
-        let offer_owner = &ctx.accounts.owner;
-        let system_program = &ctx.accounts.system_program;
-        let token_program = &ctx.accounts.token_program;
         let offer = &mut ctx.accounts.offer;
 
         // require!(
@@ -179,12 +174,6 @@ pub mod escrow {
 
         Ok(())
     }
-}
-
-pub enum EscrowStatus {
-    Open,
-    Canceled,
-    Completed,
 }
 
 #[derive(Accounts)]
@@ -297,6 +286,7 @@ pub struct CreateOffer<'info> {
     pub system_program: Program<'info, System>,
     pub escrow_house: UncheckedAccount<'info>,
     pub fee_destination: UncheckedAccount<'info>,
+    pub offer: Account<'info, Offer>,
 }
 
 // cancel

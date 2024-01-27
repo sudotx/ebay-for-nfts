@@ -68,41 +68,20 @@ pub fn make_ata<'a>(
     Ok(())
 }
 
-// pub fn assert_metadata_valid<'a>(
-//     metadata: &UncheckedAccount,
-//     token_account: &anchor_lang::prelude::Account<'a, TokenAccount>,
-// ) -> Result<()> {
-//     assert_derivation(
-//         // &mpl_token_metadata::id(),
-//         &mpl_token_metadata::id(),
-//         &metadata.to_account_info(),
-//         &[
-//             mpl_token_metadata::state::PREFIX.as_bytes(),
-//             mpl_token_metadata::id().as_ref(),
-//             token_account.mint.as_ref(),
-//         ],
-//     )?;
-
-//     if metadata.data_is_empty() {
-//         return Err(OTCDeskError::MetadataDoesntExist.into());
-//     }
-//     Ok(())
-// }
-
 pub fn get_fee_payer<'a, 'b>(
     authority: &UncheckedAccount,
-    auction_house: &anchor_lang::prelude::Account<EscrowAccount>,
+    escrow_house: &anchor_lang::prelude::Account<EscrowAccount>,
     wallet: AccountInfo<'a>,
-    auction_house_fee_account: AccountInfo<'a>,
-    auction_house_seeds: &'b [&'b [u8]],
+    escrow_house_fee_account: AccountInfo<'a>,
+    escrow_house_seeds: &'b [&'b [u8]],
 ) -> Result<(AccountInfo<'a>, &'b [&'b [u8]])> {
     let mut seeds: &[&[u8]] = &[];
     let fee_payer: AccountInfo;
     if authority.to_account_info().is_signer {
-        seeds = auction_house_seeds;
-        fee_payer = auction_house_fee_account;
+        seeds = escrow_house_seeds;
+        fee_payer = escrow_house_fee_account;
     } else if wallet.is_signer {
-        if auction_house.requires_sign_off {
+        if escrow_house.requires_sign_off {
             return Err(OTCDeskError::CannotTakeThisActionWithoutEscrowSignOff.into());
         }
         fee_payer = wallet
@@ -204,8 +183,8 @@ pub fn assert_owned_by(account: &AccountInfo, owner: &Pubkey) -> Result<()> {
 
 #[allow(clippy::too_many_arguments)]
 pub fn pay_escrow_house_fees<'a>(
-    auction_house: &anchor_lang::prelude::Account<'a, EscrowAccount>,
-    auction_house_treasury: &AccountInfo<'a>,
+    escrow_house: &anchor_lang::prelude::Account<'a, EscrowAccount>,
+    escrow_house_treasury: &AccountInfo<'a>,
     escrow_payment_account: &AccountInfo<'a>,
     token_program: &AccountInfo<'a>,
     system_program: &AccountInfo<'a>,
@@ -213,7 +192,7 @@ pub fn pay_escrow_house_fees<'a>(
     size: u64,
     is_native: bool,
 ) -> Result<u64> {
-    let fees = auction_house.seller_fee_basis_points;
+    let fees = escrow_house.seller_fee_basis_points;
     let total_fee = (fees as u128)
         .checked_mul(size as u128)
         .ok_or(OTCDeskError::NumericalOverflow)?
@@ -224,16 +203,16 @@ pub fn pay_escrow_house_fees<'a>(
             &spl_token::instruction::transfer(
                 token_program.key,
                 escrow_payment_account.key,
-                auction_house_treasury.key,
-                &auction_house.key(),
+                escrow_house_treasury.key,
+                &escrow_house.key(),
                 &[],
                 total_fee,
             )?,
             &[
                 escrow_payment_account.clone(),
-                auction_house_treasury.clone(),
+                escrow_house_treasury.clone(),
                 token_program.clone(),
-                auction_house.to_account_info(),
+                escrow_house.to_account_info(),
             ],
             &[signer_seeds],
         )?;
@@ -241,12 +220,12 @@ pub fn pay_escrow_house_fees<'a>(
         invoke_signed(
             &system_instruction::transfer(
                 escrow_payment_account.key,
-                auction_house_treasury.key,
+                escrow_house_treasury.key,
                 total_fee,
             ),
             &[
                 escrow_payment_account.clone(),
-                auction_house_treasury.clone(),
+                escrow_house_treasury.clone(),
                 system_program.clone(),
             ],
             &[signer_seeds],
