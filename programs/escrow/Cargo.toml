@@ -1,0 +1,45 @@
+[package]
+name = "escrow"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "escrow"
+
+[features]
+no-entrypoint = []
+no-idl = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.26.0"
+anchor-spl = "0.26.0"
+spl-token = { version = "3.5.0", features = ["no-entrypoint"] }
+arrayref = "0.3.7"
+spl-associated-token-account = "2.3.0"
+mpl-token-auth-rules = { version = "1.2.0", features = ["no-entrypoint"] }
+thiserror = "1.0"
+mpl-token-metadata = "4.0.0"
+
+# install oracle sdk to get realtime values of NFT collection
+
+[dev-dependencies]
+anchor-client = "0.26.0"
+rmp-serde = "1.1.1"
+shellexpand = "2.1.2"
+serde = { version = "1.0.147", features = ["derive"] }
+serde_json = "1.0"
+solana-program = "1.14"
+solana-program-test = "1.14"
+solana-sdk = "1.14"
+env_logger = "0.9.3"
+
+[profile.release]
+overflow-checks = true # Enable integer overflow checks.
+strip = true
+opt-level = "z"
+lto = true
+codegen-units = 1
