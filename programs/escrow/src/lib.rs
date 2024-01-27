@@ -1,6 +1,6 @@
 use anchor_lang::{
     prelude::*,
-    solana_program::{program::invoke_signed, system_instruction},
+    solana_program::{program::invoke, program::invoke_signed, system_instruction},
 };
 use anchor_spl::token::{self, Mint, SetAuthority, Token, TokenAccount, Transfer};
 
@@ -17,7 +17,8 @@ pub mod escrow {
     pub const PREFIX: &str = "auction_house";
     pub const FEE_PAYER: &str = "fee_payer";
 
-    pub const ESCROW_ACCOUNT_SIZE: usize = 32 + 32 + 32 + 8 + 8;
+    pub const ESCROW_ACCOUNT_SIZE: usize =
+        32 + 32 + 32 + 32 + 32 + 32 + 32 + 32 + 8 + 8 + 2 + 1 + 1;
 
     // initialize escrow
     pub fn initialize_escrow(
@@ -103,7 +104,7 @@ pub mod escrow {
         let escrow_house_treasury = &ctx.accounts.escrow_house_treasury;
 
         require!(
-            *ctx.accounts.authority.key == escrow_house.creator,
+            *ctx.accounts.authority.key == escrow_house.initializer_key,
             OTCDeskError::AdminAuthorityMismatch
         );
 
@@ -119,7 +120,7 @@ pub mod escrow {
         invoke_signed(
             &system_instruction::transfer(
                 &escrow_house_treasury.key(),
-                &escrow_house.creator.key(),
+                &escrow_house.initializer_key.key(),
                 amount,
             ),
             &[
@@ -153,8 +154,6 @@ pub mod escrow {
 
         let offer_number: u16 = 0;
 
-        let signer_seeds: &[&[u8]] = &[];
-
         // create an offer
 
         // setup an offer structure to save the details on each offer,
@@ -164,7 +163,7 @@ pub mod escrow {
         offer.seller = offer_owner.key();
 
         // transfer fees
-        invoke_signed(
+        invoke(
             &system_instruction::transfer(
                 &escrow_payment_account.key(),
                 escrow_house_treasury.key,
@@ -175,7 +174,6 @@ pub mod escrow {
                 escrow_house_treasury.to_account_info(),
                 system_program.to_account_info(),
             ],
-            &[signer_seeds],
         )?;
 
         Ok(total_fee)
@@ -281,7 +279,7 @@ pub struct WithdrawFromFee<'info> {
     pub escrow_payment_account: UncheckedAccount<'info>,
 
     /// Escrow  instance PDA account.
-    #[account(mut, seeds=[PREFIX.as_bytes(), escrow_house.creator.as_ref()], bump=escrow_house.bump, has_one=authority, has_one=fee_withdrawal_destination, has_one=escrow_house_fee_account)]
+    #[account(mut, seeds=[PREFIX.as_bytes(), escrow_house.initializer_key.as_ref()], bump=escrow_house.bump, has_one=authority, has_one=fee_withdrawal_destination, has_one=escrow_house_fee_account)]
     pub escrow_house: Account<'info, EscrowAccount>,
 
     pub token_program: Program<'info, Token>,
@@ -334,7 +332,7 @@ pub struct Cancel<'info> {
     #[account(
         seeds = [
             PREFIX.as_bytes(),
-            escrow_house.creator.as_ref(),
+            escrow_house.initializer_key.as_ref(),
         ],
         bump=escrow_house.bump,
         has_one=authority,
@@ -365,19 +363,16 @@ pub struct EscrowAccount {
     pub initializer_key: Pubkey,
     pub initializer_deposit_token_account: Pubkey,
     pub initializer_receive_token_account: Pubkey,
-    pub initializer_amount: u64,
-    pub taker_amount: u64,
     pub escrow_house_fee_account: Pubkey,
     pub escrow_house_fee_treasury: Pubkey,
-    pub fee_payer: Pubkey,
     pub fee_withdrawal_destination: Pubkey,
+    pub fee_payer: Pubkey,
     pub authority: Pubkey,
-    pub creator: Pubkey,
+    pub initializer_amount: u64,
+    pub taker_amount: u64,
+    pub seller_fee_basis_points: u16,
     pub bump: u8,
     pub fee_payer_bump: u8,
-    pub seller_fee_basis_points: u16,
-    pub requires_sign_off: bool,
-    pub escrow_payment_bump: u8,
 }
 
 #[account]
@@ -460,107 +455,14 @@ impl<'info> Exchange<'info> {
 
 #[error_code]
 pub enum OTCDeskError {
-    #[msg("PublicKeyMismatch")]
-    PublicKeyMismatch,
-
-    #[msg("InvalidMintAuthority")]
-    InvalidMintAuthority,
-
-    #[msg("UninitializedAccount")]
-    UninitializedAccount,
-
-    #[msg("IncorrectOwner")]
-    IncorrectOwner,
-
-    #[msg("PublicKeysShouldBeUnique")]
-    PublicKeysShouldBeUnique,
-
-    #[msg("StatementFalse")]
-    StatementFalse,
-
-    #[msg("NotRentExempt")]
-    NotRentExempt,
-
     #[msg("NumericalOverflow")]
     NumericalOverflow,
-
-    #[msg("Expected a sol account but got an spl token account instead")]
-    ExpectedSolAccount,
-
-    #[msg("Cannot exchange sol for sol")]
-    CannotExchangeSOLForSol,
-
-    #[msg("If paying with sol, sol wallet must be signer")]
-    SOLWalletMustSign,
-
-    #[msg("Cannot take this action without escrow  signing too")]
-    CannotTakeThisActionWithoutEscrowSignOff,
-
-    #[msg("No payer present on this txn")]
-    NoPayerPresent,
-
-    #[msg("Derived key invalid")]
-    DerivedKeyInvalid,
-
-    #[msg("Metadata doesn't exist")]
-    MetadataDoesntExist,
-
-    #[msg("Invalid token amount")]
-    InvalidTokenAmount,
-
-    #[msg("Both parties need to agree to this sale")]
-    BothPartiesNeedToAgreeToSale,
-
-    #[msg("Cannot match free sales unless the escrow  or seller signs off")]
-    CannotMatchFreeSalesWithoutEscrowOrSellerSignoff,
-
-    #[msg("This sale requires a signer")]
-    SaleRequiresSigner,
-
-    #[msg("Old seller not initialized")]
-    OldSellerNotInitialized,
-
-    #[msg("Seller ata cannot have a delegate set")]
-    SellerATACannotHaveDelegate,
-
-    #[msg("Buyer ata cannot have a delegate set")]
-    BuyerATACannotHaveDelegate,
-
-    #[msg("No valid signer present")]
-    NoValidSignerPresent,
-
-    #[msg("BP must be less than or equal to 10000")]
-    InvalidBasisPoints,
-
-    #[msg("The instruction does not match")]
-    InstructionMismatch,
-
-    #[msg("Invalid Admin for this Escrow  instance.")]
-    InvalidAdmin,
-
-    #[msg("The instruction would drain the escrow below rent exemption threshold")]
-    EscrowUnderRentExemption,
-
-    #[msg("Invalid seeds or Escrow  not delegated")]
-    InvalidSeedsOrEscrowNotDelegated,
-
-    #[msg("The buyer trade state was unable to be initialized.")]
-    BuyerTradeStateNotValid,
-
-    #[msg("Amount of tokens available for purchase is less than the partial order amount.")]
-    NotEnoughTokensAvailableForPurchase,
-
-    #[msg("Escrow  already delegated.")]
-    EscrowAlreadyDelegated,
 
     #[msg("Admin Authority Mismatch")]
     AdminAuthorityMismatch,
 
     #[msg("Insufficient funds in escrow account to purchase.")]
     InsufficientFunds,
-
-    #[msg("This sale requires exactly one signer: either the seller or the authority.")]
-    SaleRequiresExactlyOneSigner,
 
     #[msg("This Offer has not been accepted.")]
     OfferNotAccepted,
