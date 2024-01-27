@@ -1,7 +1,3 @@
-mod constants;
-mod pda;
-mod utils;
-use crate::constants::*;
 use anchor_lang::{
     prelude::*,
     solana_program::{program::invoke_signed, system_instruction},
@@ -14,11 +10,14 @@ declare_id!("8poGjoAGyUVK6Ups3yaUBxFxXUYXmhyBo92qxQRkyUtV");
 
 #[program]
 pub mod escrow {
-    use self::{pda::find_escrow_house_fee_pda, utils::pay_escrow_house_fees};
 
     use super::*;
 
     const ESCROW_PDA_SEED: &[u8] = b"escrow";
+    pub const PREFIX: &str = "auction_house";
+    pub const FEE_PAYER: &str = "fee_payer";
+
+    pub const ESCROW_ACCOUNT_SIZE: usize = 32 + 32 + 32 + 8 + 8;
 
     // initialize escrow
     pub fn initialize_escrow(
@@ -98,12 +97,15 @@ pub mod escrow {
         Ok(())
     }
 
-    pub fn withdraw_from_fee_account(ctx: Context<WithdrawFromFee>, _amount: u64) -> Result<()> {
+    pub fn withdraw_from_fee_account(ctx: Context<WithdrawFromFee>, amount: u64) -> Result<()> {
         let escrow_house = &ctx.accounts.escrow_house;
         let system_program = &ctx.accounts.system_program;
-        let token_program = &ctx.accounts.token_program;
         let escrow_house_treasury = &ctx.accounts.escrow_house_treasury;
-        let escrow_payment_account = &ctx.accounts.escrow_payment_account;
+
+        require!(
+            *ctx.accounts.authority.key == escrow_house.creator,
+            OTCDeskError::AdminAuthorityMismatch
+        );
 
         let escrow_house_key = escrow_house.key();
 
@@ -114,43 +116,15 @@ pub mod escrow {
             &[escrow_house.fee_payer_bump],
         ];
 
-        let _ = pay_escrow_house_fees(
-            escrow_house,
-            escrow_house_treasury,
-            escrow_payment_account,
-            token_program,
-            system_program,
-            &seeds,
-            1,
-            true,
-        );
-
-        Ok(())
-    }
-
-    pub fn create_offer(ctx: Context<CreateOffer>, price: u32) -> Result<()> {
-        let offer_owner = &ctx.accounts.owner;
-        let system_program = &ctx.accounts.system_program;
-        let offer_price = price;
-        let escrow_house = &ctx.accounts.escrow_house;
-        let fee_dest = &ctx.accounts.fee_destination;
-        let offer = &mut ctx.accounts.offer;
-
-        offer.price = offer_price;
-
-        let (escrow_fee, _num) = find_escrow_house_fee_pda(escrow_house.key);
-        let seeds = [&ESCROW_PDA_SEED[..]];
-
-        // setup an offer structure to save the details on each offer,
-
-        // create an offer account
-
-        // transfer fee for creating offer to fee destination
         invoke_signed(
-            &system_instruction::transfer(&offer_owner.key(), &escrow_fee.key(), FEE),
+            &system_instruction::transfer(
+                &escrow_house_treasury.key(),
+                &escrow_house.creator.key(),
+                amount,
+            ),
             &[
                 escrow_house.to_account_info(),
-                fee_dest.to_account_info(),
+                escrow_house.to_account_info(),
                 system_program.to_account_info(),
             ],
             &[&seeds],
@@ -159,14 +133,64 @@ pub mod escrow {
         Ok(())
     }
 
+    pub fn create_offer(ctx: Context<CreateOffer>, price: u32, size: u64) -> Result<u64> {
+        let offer_owner = &ctx.accounts.owner;
+        let system_program = &ctx.accounts.system_program;
+        let offer_price = price;
+        let escrow_house = &ctx.accounts.escrow_house;
+        let offer = &mut ctx.accounts.offer;
+
+        let escrow_payment_account = &ctx.accounts.escrow_house;
+        let escrow_house_treasury = &ctx.accounts.escrow_house_treasury;
+
+        let fees = ctx.accounts.escrow_house.seller_fee_basis_points;
+
+        let total_fee = (fees as u128)
+            .checked_mul(size as u128)
+            .ok_or(OTCDeskError::NumericalOverflow)?
+            .checked_div(10000)
+            .ok_or(OTCDeskError::NumericalOverflow)? as u64;
+
+        let offer_number: u16 = 0;
+
+        let signer_seeds: &[&[u8]] = &[];
+
+        // create an offer
+
+        // setup an offer structure to save the details on each offer,
+        offer.price = offer_price;
+        offer.offer_index = offer_number;
+        offer.sol_escrow = escrow_house.key();
+        offer.seller = offer_owner.key();
+
+        // transfer fees
+        invoke_signed(
+            &system_instruction::transfer(
+                &escrow_payment_account.key(),
+                escrow_house_treasury.key,
+                total_fee,
+            ),
+            &[
+                escrow_payment_account.to_account_info(),
+                escrow_house_treasury.to_account_info(),
+                system_program.to_account_info(),
+            ],
+            &[signer_seeds],
+        )?;
+
+        Ok(total_fee)
+    }
+
     pub fn accept_offer(ctx: Context<AcceptOffer>) -> Result<()> {
         let offer = &mut ctx.accounts.offer;
 
+        //
         require!(
             *ctx.accounts.authority.key == *ctx.accounts.initializer.key,
             OTCDeskError::AdminAuthorityMismatch
         );
 
+        // flip this to true, meaning offer has been accepted
         offer.accepted = true;
 
         Ok(())
@@ -278,13 +302,13 @@ pub struct AcceptOffer<'info> {
 }
 #[derive(Accounts)]
 pub struct CreateOffer<'info> {
-    pub listing_mint: Account<'info, Mint>,
     pub seller: UncheckedAccount<'info>,
     #[account(mut)]
     pub owner: Signer<'info>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
-    pub escrow_house: UncheckedAccount<'info>,
+    pub escrow_house: Account<'info, EscrowAccount>,
+    pub escrow_house_treasury: UncheckedAccount<'info>,
     pub fee_destination: UncheckedAccount<'info>,
     pub offer: Account<'info, Offer>,
 }
@@ -344,6 +368,7 @@ pub struct EscrowAccount {
     pub initializer_amount: u64,
     pub taker_amount: u64,
     pub escrow_house_fee_account: Pubkey,
+    pub escrow_house_fee_treasury: Pubkey,
     pub fee_payer: Pubkey,
     pub fee_withdrawal_destination: Pubkey,
     pub authority: Pubkey,
@@ -353,7 +378,6 @@ pub struct EscrowAccount {
     pub seller_fee_basis_points: u16,
     pub requires_sign_off: bool,
     pub escrow_payment_bump: u8,
-    pub scopes: [bool; MAX_NUM_SCOPES],
 }
 
 #[account]
