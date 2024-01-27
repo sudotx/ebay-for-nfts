@@ -4,7 +4,7 @@ pub const TREASURY: &str = "treasury";
 pub const SIGNER: &str = "signer";
 pub const TRADE_STATE_SIZE: usize = 1;
 pub const MAX_NUM_SCOPES: usize = 7;
-pub const FEE: i32 = 100_000;
+pub const FEE: u64 = 100_000;
 
 pub const ESCROW_HOUSE_SIZE: usize = 8 +                   // key
 32 +                                                        // fee Payer

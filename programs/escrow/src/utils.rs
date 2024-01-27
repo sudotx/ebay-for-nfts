@@ -1,4 +1,4 @@
-use crate::{constants::*, EscrowHouse, OTCDeskError, PREFIX};
+use crate::{constants::*, EscrowAccount, OTCDeskError, PREFIX};
 use anchor_lang::{
     prelude::*,
     solana_program::{
@@ -91,7 +91,7 @@ pub fn make_ata<'a>(
 
 pub fn get_fee_payer<'a, 'b>(
     authority: &UncheckedAccount,
-    auction_house: &anchor_lang::prelude::Account<EscrowHouse>,
+    auction_house: &anchor_lang::prelude::Account<EscrowAccount>,
     wallet: AccountInfo<'a>,
     auction_house_fee_account: AccountInfo<'a>,
     auction_house_seeds: &'b [&'b [u8]],
@@ -103,7 +103,7 @@ pub fn get_fee_payer<'a, 'b>(
         fee_payer = auction_house_fee_account;
     } else if wallet.is_signer {
         if auction_house.requires_sign_off {
-            return Err(OTCDeskError::CannotTakeThisActionWithoutEscrowHouseSignOff.into());
+            return Err(OTCDeskError::CannotTakeThisActionWithoutEscrowSignOff.into());
         }
         fee_payer = wallet
     } else {
@@ -204,7 +204,7 @@ pub fn assert_owned_by(account: &AccountInfo, owner: &Pubkey) -> Result<()> {
 
 #[allow(clippy::too_many_arguments)]
 pub fn pay_escrow_house_fees<'a>(
-    auction_house: &anchor_lang::prelude::Account<'a, EscrowHouse>,
+    auction_house: &anchor_lang::prelude::Account<'a, EscrowAccount>,
     auction_house_treasury: &AccountInfo<'a>,
     escrow_payment_account: &AccountInfo<'a>,
     token_program: &AccountInfo<'a>,
