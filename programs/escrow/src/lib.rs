@@ -162,10 +162,10 @@ pub mod escrow {
     pub fn accept_offer(ctx: Context<AcceptOffer>) -> Result<()> {
         let offer = &mut ctx.accounts.offer;
 
-        // require!(
-        //     &ctx.accounts.owner.key() == offer_authority.key(),
-        //     OTCDeskError::AdminAuthorityMismatch
-        // );
+        require!(
+            *ctx.accounts.authority.key == *ctx.accounts.initializer.key,
+            OTCDeskError::AdminAuthorityMismatch
+        );
 
         offer.accepted = true;
 
@@ -266,6 +266,7 @@ pub struct WithdrawFromFee<'info> {
 
 #[derive(Accounts)]
 pub struct AcceptOffer<'info> {
+    pub initializer: UncheckedAccount<'info>,
     pub seller: UncheckedAccount<'info>,
     #[account(mut)]
     pub owner: Signer<'info>,
@@ -302,10 +303,10 @@ pub struct Cancel<'info> {
     /// Token mint account of SPL token.
     pub token_mint: Box<Account<'info, Mint>>,
 
-    /// Escrow  instance authority account.
+    /// Escrow instance authority account.
     pub authority: UncheckedAccount<'info>,
 
-    /// Escrow  instance PDA account.
+    /// Escrow instance PDA account.
     #[account(
         seeds = [
             PREFIX.as_bytes(),
