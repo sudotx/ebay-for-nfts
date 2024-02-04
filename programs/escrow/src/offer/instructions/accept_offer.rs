@@ -6,7 +6,7 @@ use crate::{
     constants::{SEED_MAIN_STATE, SEED_OFFER},
     error::OTCDeskError,
     events,
-    offer::{self, offer_state::OfferState},
+    offer::offer_state::OfferState,
     utils::{transfer_token, transfer_token_from_bidder_state},
 };
 
@@ -20,6 +20,7 @@ pub fn accept_offer(ctx: Context<AcceptOffer>, amount: u64) -> Result<()> {
     let offer_state = &mut ctx.accounts.offer_state_account;
     let offer_state_ata = ctx.accounts.offer_state_account_ata.to_account_info();
     let token_program = ctx.accounts.token_program.to_account_info();
+
 
     if seller.key() == offer_state.bidder {
         return anchor_lang::err!(OTCDeskError::SelfOfferAccept);
@@ -44,7 +45,7 @@ pub fn accept_offer(ctx: Context<AcceptOffer>, amount: u64) -> Result<()> {
     //NOTE: Transfering the fees
     let fees = (main_state.fee_rate * amount as f64) as u64;
 
-    // ilesoviy - check remaining balance
+    // check remaining balance
     if amount + fees > ctx.accounts.seller_requested_token_ata.lamports() {
         return anchor_lang::err!(OTCDeskError::NotEnoughToken);
     }
@@ -65,7 +66,7 @@ pub fn accept_offer(ctx: Context<AcceptOffer>, amount: u64) -> Result<()> {
         bidder_requested_token_ata,
         seller.to_account_info(),
         token_program.to_account_info(),
-        amount,
+        1,
     )
     .map_err(|_| OTCDeskError::NotEnoughToken)?;
 
@@ -75,8 +76,7 @@ pub fn accept_offer(ctx: Context<AcceptOffer>, amount: u64) -> Result<()> {
         offer_state_ata,
         seller_offered_token_ata,
         token_program,
-        // deducted_offered_amount
-        1
+        amount
     )?;
 
     //NOTE: set the state
