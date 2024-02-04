@@ -3,7 +3,7 @@ use anchor_spl::token::{Token, TokenAccount};
 
 use crate::{
     _main::main_state::MainState,
-    constants::{SEED_ALLOWED_TOKEN, SEED_MAIN_STATE, SEED_OFFER},
+    constants::{SEED_MAIN_STATE, SEED_OFFER},
     error::OTCDeskError,
     events,
     offer::offer_state::OfferState,
@@ -23,19 +23,7 @@ pub fn create_offer(
     let offer_state = &mut ctx.accounts.offer_state_account;
     let offer_state_ata = ctx.accounts.offer_state_account_ata.to_account_info();
     let token_program = ctx.accounts.token_program.to_account_info();
-    let offered_token_allowed_checker =
-        ctx.accounts.offered_token_allowed_checker.to_account_info();
-    let requested_token_allowed_checker = ctx
-        .accounts
-        .requested_token_allowed_checker
-        .to_account_info();
     let fees = (main_state.fee_rate * offered_amount as f64) as u64;
-
-    if offered_token_allowed_checker.owner != ctx.program_id
-        || requested_token_allowed_checker.owner != ctx.program_id
-    {
-        return anchor_lang::err!(OTCDeskError::TokenNotAllowed);
-    }
 
     if offer_state.is_active {
         return anchor_lang::err!(OTCDeskError::OfferAlreadyCreated);
@@ -127,22 +115,6 @@ offer_state_account.requested_token.key().as_ref()
         token::authority = offer_state_account,
     )]
     pub offer_state_account_ata: Account<'info, TokenAccount>,
-
-    ///CHECK:
-    #[account(
-        mut,
-        seeds = [SEED_ALLOWED_TOKEN, offer_state_account.offered_token.key().as_ref()],
-        bump,
-    )]
-    pub offered_token_allowed_checker: AccountInfo<'info>,
-
-    ///CHECK:
-    #[account(
-        mut,
-        seeds = [SEED_ALLOWED_TOKEN, offer_state_account.requested_token.key().as_ref()],
-        bump,
-    )]
-    pub requested_token_allowed_checker: AccountInfo<'info>,
 
     #[account(
         mut,

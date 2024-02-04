@@ -5,9 +5,6 @@ pub enum OTCDeskError {
     #[msg("Only Owner can call")]
     OnlyOwnerCanCall,
 
-    #[msg("Token not Allowed")]
-    TokenNotAllowed,
-
     #[msg("You Do Not Have Enough Token to make Transaction")]
     NotEnoughToken,
 

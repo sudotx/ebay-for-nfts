@@ -42,25 +42,21 @@ pub fn close_offer(ctx: Context<CloseOffer>) -> Result<()> {
 #[derive(Accounts)]
 pub struct CloseOffer<'info> {
     pub bidder: Signer<'info>,
-
     ///CHECK:
     pub offered_token: AccountInfo<'info>,
     ///CHECK:
     pub requested_token: AccountInfo<'info>,
-
     #[account(
         seeds = [SEED_MAIN_STATE],
         bump,
     )]
     pub main_state_account: Account<'info, MainState>,
-
     #[account(
         mut,
         seeds = [SEED_OFFER,offer_state_account.init_time.to_le_bytes().as_ref(),bidder.key().as_ref(),offer_state_account.offered_token.key().as_ref(),offer_state_account.requested_token.key().as_ref()],
         bump,
     )]
     pub offer_state_account: Account<'info, OfferState>,
-
     ///CHECK:
     #[account(
         mut,

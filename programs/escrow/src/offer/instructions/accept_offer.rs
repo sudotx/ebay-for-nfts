@@ -21,7 +21,6 @@ pub fn accept_offer(ctx: Context<AcceptOffer>, amount: u64) -> Result<()> {
     let offer_state_ata = ctx.accounts.offer_state_account_ata.to_account_info();
     let token_program = ctx.accounts.token_program.to_account_info();
 
-
     if seller.key() == offer_state.bidder {
         return anchor_lang::err!(OTCDeskError::SelfOfferAccept);
     }
@@ -50,7 +49,7 @@ pub fn accept_offer(ctx: Context<AcceptOffer>, amount: u64) -> Result<()> {
         return anchor_lang::err!(OTCDeskError::NotEnoughToken);
     }
 
-    // NOTE: Transfer the fees 
+    // NOTE: Transfer the fees
     transfer_token(
         seller_requested_token_ata.to_account_info(),
         fee_receiver_ata,
@@ -76,7 +75,7 @@ pub fn accept_offer(ctx: Context<AcceptOffer>, amount: u64) -> Result<()> {
         offer_state_ata,
         seller_offered_token_ata,
         token_program,
-        amount
+        amount,
     )?;
 
     //NOTE: set the state
@@ -90,10 +89,12 @@ pub fn accept_offer(ctx: Context<AcceptOffer>, amount: u64) -> Result<()> {
 
     if offer_state.min_requested_amount > offer_state.requested_amount {
         if offer_state.requested_amount == 0 {
-            emit!(events::OfferCompleted{offer_id: offer_state.key()});
+            emit!(events::OfferCompleted {
+                offer_id: offer_state.key()
+            });
             offer_state.re_init();
         }
-    }else{
+    } else {
         offer_state.min_requested_amount = offer_state.requested_amount;
     }
 
