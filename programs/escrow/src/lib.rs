@@ -18,9 +18,7 @@ declare_id!("8poGjoAGyUVK6Ups3yaUBxFxXUYXmhyBo92qxQRkyUtV");
 // once offer is accepted, create a pda from the mint account(of listing), ata of Alice, ata of Bob
 // exchange happens
 // spl token is sent to Bobs ata
-// escrow pda account is closed, lampports sent back to Alice
-// collect fees via spl token, shy away from using native
-// in fact use spl for everything
+// escrow pda account is closed, tokens sent back to Alice
 
 #[program]
 pub mod escrow {
