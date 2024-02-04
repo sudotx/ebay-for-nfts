@@ -44,18 +44,12 @@ pub fn accept_offer(ctx: Context<AcceptOffer>, amount: u64) -> Result<()> {
     //NOTE: Transfering the fees
     let fees = (main_state.fee_rate * amount as f64) as u64;
 
-    // have a helper function to fetch the ata balance of the seller requested token ata
-    // format it ti u64 and use it 
-
     // ilesoviy - check remaining balance
-    // if amount + fees > ctx.accounts.seller_requested_token_ata.amount {
-    //     return anchor_lang::err!(OTCDeskError::NotEnoughToken);
-    // }
-    if amount + fees > 1 {
+    if amount + fees > ctx.accounts.seller_requested_token_ata.lamports() {
         return anchor_lang::err!(OTCDeskError::NotEnoughToken);
     }
 
-    // transfer fees 
+    // NOTE: Transfer the fees 
     transfer_token(
         seller_requested_token_ata.to_account_info(),
         fee_receiver_ata,
