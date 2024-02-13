@@ -33,7 +33,6 @@ pub fn create_offer(
         return anchor_lang::err!(OTCDeskError::TooHighAmount);
     }
 
-    // ilesoviy - check balance
     if offered_amount + fees > ctx.accounts.bidder_ata.amount {
         return anchor_lang::err!(OTCDeskError::NotEnoughToken);
     }
