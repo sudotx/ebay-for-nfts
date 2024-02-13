@@ -39,7 +39,7 @@ pub fn accept_offer(ctx: Context<AcceptOffer>, amount: u64) -> Result<()> {
     }
 
     let partial_offered_amount =
-        (offer_state.offered_amount as u128 * amount as u128) as u64 / offer_state.requested_amount; // ilesovoy - potential bug (multiplied value can exceed u64)
+        (offer_state.offered_amount as u128 * amount as u128) as u64 / offer_state.requested_amount; // potential bug (multiplied value can exceed u64)
 
     //NOTE: Transfering the fees
     let fees = (main_state.fee_rate * amount as f64) as u64;
@@ -101,7 +101,7 @@ pub fn accept_offer(ctx: Context<AcceptOffer>, amount: u64) -> Result<()> {
     Ok(())
 }
 
-// main state_account: represents the OTC program
+// main state_account: represents the program
 // seller_offered_token_ata: sellers token account
 // seller_requested_token_ata: token account of the seller
 // bidder_requested_token_ata: token account of the bidder

@@ -102,8 +102,7 @@ pub struct CreateOffer<'info> {
             SEED_OFFER,
             offer_state_account.init_time.to_le_bytes().as_ref(),
             bidder.key().as_ref(),
-            offer_state_account.offered_token.key().as_ref(),
-offer_state_account.requested_token.key().as_ref()
+            offer_state_account.offered_token.key().as_ref(),offer_state_account.requested_token.key().as_ref()
         ],
         bump,
     )]
