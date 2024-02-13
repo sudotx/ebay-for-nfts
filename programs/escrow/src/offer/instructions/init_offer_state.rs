@@ -6,9 +6,11 @@ use anchor_spl::{
 
 use crate::{constants::SEED_OFFER, offer::offer_state::OfferState};
 
+// initialize an offer
 pub fn init_offer_state(ctx: Context<InitOfferState>, init_time: i64) -> Result<()> {
     let state = &mut ctx.accounts.offer_state_account;
 
+    // set the state value to the current bidders
     state.bidder = ctx.accounts.bidder.key();
     state.offered_token = ctx.accounts.offered_token.key();
     state.requested_token = ctx.accounts.requested_token.key();

@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 
+// main state of the program
 #[account]
 pub struct MainState {
     pub owner: Pubkey,
@@ -19,6 +20,9 @@ pub struct MainStateInput {
 }
 
 impl MainStateInput {
+    // set the value of the owner,
+    // fee receiver and current
+    //  fee rate for being part of an offering
     pub fn set_value(&self, state: &mut Account<MainState>) {
         state.owner = self.owner;
         state.fee_receiver = self.fee_receiver;

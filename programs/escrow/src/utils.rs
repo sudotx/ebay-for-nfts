@@ -3,6 +3,14 @@ use anchor_spl::token::{self, Transfer};
 
 use crate::{constants::SEED_OFFER, offer::offer_state::OfferState};
 
+// This module provides functions for transferring tokens
+
+// This function describes transfer of a specific amount of tokens from one account to another
+// - `from`: AccountInfo of the sender.
+// - `to`: AccountInfo of the recipient.
+// - `authority`: AccountInfo of the authority controlling the transfer.
+// - `token_program`: AccountInfo of the token program.
+// - `amount`: The amount of tokens to transfer.
 pub fn transfer_token<'a>(
     from: AccountInfo<'a>,
     to: AccountInfo<'a>,
@@ -22,6 +30,14 @@ pub fn transfer_token<'a>(
     Ok(())
 }
 
+// This describes a function that transfers tokens from an account associated with the bidder's state to another
+
+// Parameters:
+// - `offer_state`: Mutable reference to the bidder's state account.
+// - `offer_state_account_ata`: AccountInfo of the bidder's state account.
+// - `receiver_ata`: AccountInfo of the recipient's associated token account.
+// - `token_program`: AccountInfo of the token program.
+// - `amount`: The amount of tokens to transfer.
 pub fn transfer_token_from_bidder_state<'a>(
     offer_state: &mut Account<'a, OfferState>,
     offer_state_account_ata: AccountInfo<'a>,

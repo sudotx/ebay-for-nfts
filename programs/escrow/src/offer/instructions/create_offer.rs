@@ -33,6 +33,7 @@ pub fn create_offer(
         return anchor_lang::err!(OTCDeskError::TooHighAmount);
     }
 
+    // the offered amount and fees must be higher than the bidders token balance
     if offered_amount + fees > ctx.accounts.bidder_ata.amount {
         return anchor_lang::err!(OTCDeskError::NotEnoughToken);
     }

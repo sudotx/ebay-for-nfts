@@ -16,8 +16,10 @@ pub struct EditOfferInput {
 }
 
 pub fn edit_offer(ctx: Context<EditOffer>, input: EditOfferInput) -> Result<()> {
+    // the offer in reference to
     let offer_state = &mut ctx.accounts.offer_state_account;
 
+    // check if the offer is not currently active
     if !offer_state.is_active {
         return anchor_lang::err!(OTCDeskError::OfferNotActive);
     }
@@ -26,6 +28,7 @@ pub fn edit_offer(ctx: Context<EditOffer>, input: EditOfferInput) -> Result<()> 
         if amount == 0 {
             return anchor_lang::err!(OTCDeskError::ZeroRequestedAmount);
         }
+        // set offer amount to the set value, if it is not zero
         offer_state.requested_amount = amount;
     }
 
@@ -33,6 +36,7 @@ pub fn edit_offer(ctx: Context<EditOffer>, input: EditOfferInput) -> Result<()> 
         if amount > offer_state.requested_amount {
             return anchor_lang::err!(OTCDeskError::TooHighAmount);
         }
+        // if the requested amount exceeds the requested amount
         offer_state.min_requested_amount = amount;
     }
 
