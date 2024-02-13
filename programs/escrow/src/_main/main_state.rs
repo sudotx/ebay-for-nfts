@@ -26,6 +26,6 @@ impl MainStateInput {
     pub fn set_value(&self, state: &mut Account<MainState>) {
         state.owner = self.owner;
         state.fee_receiver = self.fee_receiver;
-        state.fee_rate = self.fee_rate as f64 / 1000_000f64 / 100f64;
+        state.fee_rate = self.fee_rate as f64 / 1_000_000f64 / 100f64;
     }
 }

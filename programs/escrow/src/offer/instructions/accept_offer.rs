@@ -45,7 +45,7 @@ pub fn accept_offer(ctx: Context<AcceptOffer>, amount: u64) -> Result<()> {
     let fees = (main_state.fee_rate * amount as f64) as u64;
 
     // check remaining balance
-    if amount + fees > ctx.accounts.seller_requested_token_ata.lamports() {
+    if amount + fees > ctx.accounts.seller_requested_token_ata.amount {
         return anchor_lang::err!(OTCDeskError::NotEnoughToken);
     }
 
@@ -101,6 +101,16 @@ pub fn accept_offer(ctx: Context<AcceptOffer>, amount: u64) -> Result<()> {
     Ok(())
 }
 
+// main state_account: represents the OTC program
+// seller_offered_token_ata: sellers token account
+// seller_requested_token_ata: token account of the seller
+// bidder_requested_token_ata: token account of the bidder
+// offer_state_account: offer pda
+// offer_state_account_ata: offer token
+// offer_state_account
+// offer_state_account_ata
+// fee_receiver_ata
+
 #[derive(Accounts)]
 pub struct AcceptOffer<'info> {
     pub seller: Signer<'info>,
@@ -113,11 +123,11 @@ pub struct AcceptOffer<'info> {
 
     ///CHECK:
     #[account(mut)]
-    pub seller_offered_token_ata: AccountInfo<'info>,
+    pub seller_offered_token_ata: Account<'info, TokenAccount>,
 
     ///CHECK:
     #[account(mut)]
-    pub seller_requested_token_ata: AccountInfo<'info>,
+    pub seller_requested_token_ata: Account<'info, TokenAccount>,
 
     #[account(
         mut,
@@ -129,7 +139,7 @@ pub struct AcceptOffer<'info> {
     #[account(
         mut,
         seeds = [
-            SEED_OFFER, 
+            SEED_OFFER,
             offer_state_account.init_time.to_le_bytes().as_ref(),
             offer_state_account.bidder.as_ref(),
             offer_state_account.offered_token.key().as_ref(),

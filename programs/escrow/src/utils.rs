@@ -6,6 +6,7 @@ use crate::{constants::SEED_OFFER, offer::offer_state::OfferState};
 // This module provides functions for transferring tokens
 
 // This function describes transfer of a specific amount of tokens from one account to another
+
 // - `from`: AccountInfo of the sender.
 // - `to`: AccountInfo of the recipient.
 // - `authority`: AccountInfo of the authority controlling the transfer.

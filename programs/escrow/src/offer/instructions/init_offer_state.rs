@@ -10,8 +10,8 @@ use crate::{constants::SEED_OFFER, offer::offer_state::OfferState};
 pub fn init_offer_state(ctx: Context<InitOfferState>, init_time: i64) -> Result<()> {
     let state = &mut ctx.accounts.offer_state_account;
 
-    // set the state value to the current bidders
-    state.bidder = ctx.accounts.bidder.key();
+    // set the state to the current bidders
+    state.seller = ctx.accounts.seller.key();
     state.offered_token = ctx.accounts.offered_token.key();
     state.requested_token = ctx.accounts.requested_token.key();
     state.init_time = init_time;
@@ -23,17 +23,17 @@ pub fn init_offer_state(ctx: Context<InitOfferState>, init_time: i64) -> Result<
 #[instruction(init_time: i64)]
 pub struct InitOfferState<'info> {
     #[account(mut)]
-    pub bidder: Signer<'info>,
+    pub seller: Signer<'info>,
 
     pub offered_token: Account<'info, Mint>,
     pub requested_token: Account<'info, Mint>,
 
-    #[account(init,payer= bidder,seeds=[SEED_OFFER, init_time.to_le_bytes().as_ref(),bidder.key().as_ref(), offered_token.key().as_ref(), requested_token.key().as_ref()],bump,space = 8 + OfferState::MAX_SIZE)]
+    #[account(init,payer= seller,seeds=[SEED_OFFER, init_time.to_le_bytes().as_ref(),seller.key().as_ref(), offered_token.key().as_ref(), requested_token.key().as_ref()],bump,space = 8 + OfferState::MAX_SIZE)]
     pub offer_state_account: Account<'info, OfferState>,
 
     #[account(
         init,
-        payer = bidder,
+        payer = seller,
         associated_token::mint = offered_token,
         associated_token::authority = offer_state_account,
     )]
