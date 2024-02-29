@@ -19,6 +19,7 @@ pub struct OfferState {
     pub min_requested_amount: u64,
     pub init_time: i64,
     pub is_active: bool,
+    pub bump_seed: u8,
 }
 
 impl OfferState {

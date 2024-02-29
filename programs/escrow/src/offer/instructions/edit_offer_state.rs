@@ -3,7 +3,7 @@ use anchor_spl::token::Token;
 
 use crate::{
     _main::main_state::MainState,
-    constants::{SEED_MAIN_STATE, SEED_OFFER},
+    constants::{METAPLEX_PROGRAM_ID, SEED_MAIN_STATE, SEED_OFFER},
     error::OTCDeskError,
     events,
     offer::offer_state::OfferState,
@@ -15,9 +15,31 @@ pub struct EditOfferInput {
     new_min_requested_token_amount: Option<u64>,
 }
 
-pub fn edit_offer(ctx: Context<EditOffer>, input: EditOfferInput) -> Result<()> {
+pub fn edit_offer(ctx: Context<EditOffer>, input: EditOfferInput, symbol: String) -> Result<()> {
     // the offer in reference to
     let offer_state = &mut ctx.accounts.offer_state_account;
+
+    let metaplex_pubkey = METAPLEX_PROGRAM_ID
+        .parse::<Pubkey>()
+        .expect("Failed to parse Metaplex Program Id");
+
+    let mint = *ctx.accounts.mint.key;
+
+    let seeds = &[
+        "metadata".as_bytes(),
+        metaplex_pubkey.as_ref(),
+        mint.as_ref(),
+    ];
+
+    let (metadata_pda, _) = Pubkey::find_program_address(seeds, &metaplex_pubkey);
+
+    if metadata_pda != *ctx.accounts.metadata.key {
+        // return Err(ErrorCode::NoMatchMetadata.into());
+    }
+
+    // if symbol.as_bytes() != SYMBOL {
+    //     // return Err(ErrorCode::NoMatchSymbol.into());
+    // }
 
     // check if the offer is not currently active
     if !offer_state.is_active {
@@ -52,6 +74,8 @@ pub fn edit_offer(ctx: Context<EditOffer>, input: EditOfferInput) -> Result<()> 
 #[derive(Accounts)]
 pub struct EditOffer<'info> {
     pub bidder: Signer<'info>,
+    pub mint: AccountInfo<'info>,
+    pub metadata: AccountInfo<'info>,
 
     #[account(
         seeds = [SEED_MAIN_STATE],

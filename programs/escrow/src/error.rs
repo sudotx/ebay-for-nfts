@@ -39,4 +39,6 @@ pub enum OTCDeskError {
 
     #[msg("This Offer has not been accepted.")]
     OfferNotAccepted,
+    #[msg("NoMatchMetadata.")]
+    NoMatchMetadata,
 }

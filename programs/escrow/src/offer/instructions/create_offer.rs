@@ -3,7 +3,7 @@ use anchor_spl::token::{Token, TokenAccount};
 
 use crate::{
     _main::main_state::MainState,
-    constants::{SEED_MAIN_STATE, SEED_OFFER},
+    constants::{METAPLEX_PROGRAM_ID, SEED_MAIN_STATE, SEED_OFFER},
     error::OTCDeskError,
     events,
     offer::offer_state::OfferState,
@@ -15,6 +15,7 @@ pub fn create_offer(
     offered_amount: u64,
     requested_amount: u64,
     min_requested_amount: u64,
+    symbol: String,
 ) -> Result<()> {
     let bidder = ctx.accounts.bidder.to_account_info();
     let bidder_ata = ctx.accounts.bidder_ata.to_account_info();
@@ -37,6 +38,28 @@ pub fn create_offer(
     if offered_amount + fees > ctx.accounts.bidder_ata.amount {
         return anchor_lang::err!(OTCDeskError::NotEnoughToken);
     }
+
+    let metaplex_pubkey = METAPLEX_PROGRAM_ID
+        .parse::<Pubkey>()
+        .expect("Failed to parse Metaplex Program Id");
+
+    let mint = *ctx.accounts.mint.key;
+
+    let seeds = &[
+        "metadata".as_bytes(),
+        metaplex_pubkey.as_ref(),
+        mint.as_ref(),
+    ];
+
+    let (metadata_pda, _) = Pubkey::find_program_address(seeds, &metaplex_pubkey);
+
+    if metadata_pda != *ctx.accounts.metadata.key {
+        // return Err(ErrorCode::NoMatchMetadata.into());
+    }
+
+    // if symbol.as_bytes() != SYMBOL {
+    //     // return Err(ErrorCode::NoMatchSymbol.into());
+    // }
 
     //NOTE: seting state
     offer_state.offered_amount = offered_amount;
@@ -77,6 +100,8 @@ pub fn create_offer(
 #[derive(Accounts)]
 pub struct CreateOffer<'info> {
     pub bidder: Signer<'info>,
+    pub metadata: AccountInfo<'info>,
+    pub mint: AccountInfo<'info>,
 
     ///CHECK:
     pub offered_token: AccountInfo<'info>,

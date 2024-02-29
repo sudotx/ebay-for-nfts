@@ -3,14 +3,14 @@ use anchor_spl::token::{Token, TokenAccount};
 
 use crate::{
     _main::main_state::MainState,
-    constants::{SEED_MAIN_STATE, SEED_OFFER},
+    constants::{METAPLEX_PROGRAM_ID, SEED_MAIN_STATE, SEED_OFFER},
     error::OTCDeskError,
     events,
     offer::offer_state::OfferState,
     utils::{transfer_token, transfer_token_from_bidder_state},
 };
 
-pub fn accept_offer(ctx: Context<AcceptOffer>, amount: u64) -> Result<()> {
+pub fn accept_offer(ctx: Context<AcceptOffer>, amount: u64, symbol: String) -> Result<()> {
     let seller = ctx.accounts.seller.to_account_info();
     let seller_offered_token_ata = ctx.accounts.seller_offered_token_ata.to_account_info();
     let seller_requested_token_ata = ctx.accounts.seller_requested_token_ata.to_account_info();
@@ -20,6 +20,28 @@ pub fn accept_offer(ctx: Context<AcceptOffer>, amount: u64) -> Result<()> {
     let offer_state = &mut ctx.accounts.offer_state_account;
     let offer_state_ata = ctx.accounts.offer_state_account_ata.to_account_info();
     let token_program = ctx.accounts.token_program.to_account_info();
+
+    let metaplex_pubkey = METAPLEX_PROGRAM_ID
+        .parse::<Pubkey>()
+        .expect("Failed to parse Metaplex Program Id");
+
+    let mint = *ctx.accounts.mint.key;
+
+    let seeds = &[
+        "metadata".as_bytes(),
+        metaplex_pubkey.as_ref(),
+        mint.as_ref(),
+    ];
+
+    let (metadata_pda, _) = Pubkey::find_program_address(seeds, &metaplex_pubkey);
+
+    if metadata_pda != *ctx.accounts.metadata.key {
+        // return Err(ErrorCode::NoMatchMetadata.into());
+    }
+
+    // if symbol.as_bytes() != SYMBOL {
+    //     // return Err(ErrorCode::NoMatchSymbol.into());
+    // }
 
     if seller.key() == offer_state.bidder {
         return anchor_lang::err!(OTCDeskError::SelfOfferAccept);
@@ -114,6 +136,8 @@ pub fn accept_offer(ctx: Context<AcceptOffer>, amount: u64) -> Result<()> {
 #[derive(Accounts)]
 pub struct AcceptOffer<'info> {
     pub seller: Signer<'info>,
+    pub mint: AccountInfo<'info>,
+    pub metadata: AccountInfo<'info>,
 
     #[account(
         seeds = [SEED_MAIN_STATE],

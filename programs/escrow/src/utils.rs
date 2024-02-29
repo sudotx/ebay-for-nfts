@@ -1,5 +1,18 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Transfer};
+use mpl_token_metadata::{
+    self,
+    instructions::{
+        DelegateAuthorityItemV1, DelegateLockedTransferV1, DelegateProgrammableConfigItemV1,
+        DelegateTransferV1, LockV1, RevokeAuthorityItemV1, RevokeLockedTransferV1,
+        RevokeProgrammableConfigItemV1, RevokeTransferV1, TransferV1, UnlockV1, VerifyCollection,
+        VerifyCollectionV1,
+    },
+    types::{Collection, CollectionDetails},
+    ID,
+};
+
+use mpl_bubblegum::instructions::Delegate;
 
 use crate::{constants::SEED_OFFER, offer::offer_state::OfferState};
 
@@ -79,3 +92,16 @@ pub fn transfer_token_from_bidder_state<'a>(
         amount,
     )
 }
+
+pub fn transfer_pnft() -> Result<()> {
+    Ok(())
+}
+pub fn gransfer_pnft() {}
+pub fn fransfer_pnft() {}
+
+// delegate token to PDA
+// verify collection
+// revoke transfer
+// lock a token in a pda
+// . delegate the token to a PDA, that then transfers it out
+//

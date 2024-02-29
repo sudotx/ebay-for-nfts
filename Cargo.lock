@@ -1506,6 +1506,7 @@ dependencies = [
  "anchor-spl",
  "arrayref",
  "env_logger",
+ "mpl-bubblegum",
  "mpl-token-auth-rules",
  "mpl-token-metadata",
  "rmp-serde",
@@ -2100,6 +2101,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "kaigan"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e623cca1f0e2a0919032c1bdabbf81dd9aa34658d5066aca7bb90d608317ab91"
+dependencies = [
+ "borsh 0.10.3",
+]
+
+[[package]]
 name = "keccak"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2338,6 +2348,20 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "mpl-bubblegum"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b3cbca5deb859e66a1a21ada94f2eaab3eb5caa4584c0c8ade0efac29a5414b8"
+dependencies = [
+ "borsh 0.10.3",
+ "kaigan",
+ "num-derive 0.3.3",
+ "num-traits",
+ "solana-program",
+ "thiserror",
 ]
 
 [[package]]
