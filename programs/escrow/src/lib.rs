@@ -60,13 +60,7 @@ pub mod escrow {
         symbol: String,
     ) -> Result<()> {
         // create a new offer for a listed item
-        offer::create_offer(
-            ctx,
-            offered_amount,
-            requested_amount,
-            min_requested_amount,
-            symbol,
-        )?;
+        offer::create_offer(ctx, offered_amount, requested_amount, min_requested_amount)?;
         Ok(())
     }
     // edit an offer

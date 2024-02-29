@@ -30,6 +30,11 @@ pub struct OfferRevoked {
 }
 
 #[event]
+pub struct ListingCreated {
+    pub listing_id: Pubkey,
+}
+
+#[event]
 pub struct OfferCompleted {
     pub offer_id: Pubkey,
 }

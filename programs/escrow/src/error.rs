@@ -28,6 +28,7 @@ pub enum OTCDeskError {
 
     #[msg("Self Offer accept not allowed")]
     SelfOfferAccept,
+
     #[msg("NumericalOverflow")]
     NumericalOverflow,
 
@@ -39,6 +40,7 @@ pub enum OTCDeskError {
 
     #[msg("This Offer has not been accepted.")]
     OfferNotAccepted,
+
     #[msg("NoMatchMetadata.")]
     NoMatchMetadata,
 }

@@ -15,7 +15,6 @@ pub fn create_offer(
     offered_amount: u64,
     requested_amount: u64,
     min_requested_amount: u64,
-    symbol: String,
 ) -> Result<()> {
     let bidder = ctx.accounts.bidder.to_account_info();
     let bidder_ata = ctx.accounts.bidder_ata.to_account_info();
