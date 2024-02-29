@@ -18,22 +18,6 @@ pub struct MainStateInput {
     pub fee_receiver: Pubkey,
     pub fee_rate: u64,
 }
-// #[account]
-// #[derive(Default)]
-// pub struct ItemV0 {
-//   // Pubkey::default if part of an offer
-//   pub listing: Pubkey,
-//   // Could be mint or asset id if compressed
-//   pub asset: Pubkey,
-//   // Pubkey::default if part of a listing
-//   pub offer: Pubkey,
-//   // Should just be an ATAs of DealTokenAccount. Note that this account is empty
-//   // until the offer is finalized and accepted, and place_in_escrow is called.
-//   pub escrow_account: Pubkey,
-//   pub item_index: u16,
-//   // Amount of the token, for NFTs this would be 1.
-//   pub amount: u64,
-// }
 impl MainStateInput {
     // set the value of the owner,
     // fee receiver and current

@@ -1,18 +1,11 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Transfer};
-use mpl_token_metadata::{
-    self,
-    instructions::{
-        DelegateAuthorityItemV1, DelegateLockedTransferV1, DelegateProgrammableConfigItemV1,
-        DelegateTransferV1, LockV1, RevokeAuthorityItemV1, RevokeLockedTransferV1,
-        RevokeProgrammableConfigItemV1, RevokeTransferV1, TransferV1, UnlockV1, VerifyCollection,
-        VerifyCollectionV1,
-    },
-    types::{Collection, CollectionDetails},
-    ID,
+use mpl_token_metadata::instructions::{
+    DelegateAuthorityItemV1, DelegateProgrammableConfigItemV1, DelegateTransferV1,
+    RevokeProgrammableConfigItemV1, TransferV1, VerifyCollection,
 };
 
-use mpl_bubblegum::instructions::Delegate;
+use mpl_token_metadata::accounts::{Metadata, MetadataDelegateRecord, TokenRecord};
 
 use crate::{constants::SEED_OFFER, offer::offer_state::OfferState};
 
@@ -93,15 +86,54 @@ pub fn transfer_token_from_bidder_state<'a>(
     )
 }
 
-pub fn transfer_pnft() -> Result<()> {
+/// .
+///
+/// # Errors
+///
+/// This function will return an error if .
+pub fn transfer_nft(
+    fro: TransferV1,
+    from: UncheckedAccount,
+    to: UncheckedAccount,
+    authority: UncheckedAccount,
+    metaplexMetadata: Metadata,
+    rcrd: TokenRecord,
+) -> Result<()> {
     Ok(())
 }
-pub fn gransfer_pnft() {}
-pub fn fransfer_pnft() {}
+/// .
 
-// delegate token to PDA
+pub fn delegate_authority_of_nft(
+    bro: DelegateAuthorityItemV1,
+    frr: DelegateProgrammableConfigItemV1,
+    delegateRecord: MetadataDelegateRecord,
+    metadata: Metadata,
+    tknRcrd: TokenRecord,
+) {
+    // let cpi_accounts = DelegateAuthorityItemV1{
+    //     authority,
+    //     authorization_rules,
+    //     authorization_rules_program, delegate, delegate_record, master_edition, metadata, mint, payer, spl_token_program, system_program, sysvar_instructions, token, token_record
+    // }
+}
+pub fn transfer_token_as_delegate(
+    who: DelegateTransferV1,
+    delegateRecord: MetadataDelegateRecord,
+    pda: UncheckedAccount,
+) {
+}
+pub fn revoke_delegate_authority_of_nft(
+    to: RevokeProgrammableConfigItemV1,
+    delegaterecord: MetadataDelegateRecord,
+    frr: DelegateProgrammableConfigItemV1,
+) {
+}
+
 // verify collection
-// revoke transfer
-// lock a token in a pda
-// . delegate the token to a PDA, that then transfers it out
-//
+pub fn get_collection_details<'a>(
+    token: UncheckedAccount<'a>,
+    verify_program: VerifyCollection,
+    token_program: AccountInfo<'a>,
+) {
+    // retreive details of a collection from its public key
+}
