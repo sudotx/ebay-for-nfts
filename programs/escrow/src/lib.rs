@@ -10,7 +10,7 @@ use offer::*;
 
 use anchor_lang::prelude::*;
 
-declare_id!("8poGjoAGyUVK6Ups3yaUBxFxXUYXmhyBo92qxQRkyUtV");
+declare_id!("");
 
 // Alice creates a listing
 // Bob creates an offer for said listing at a specified offer price
