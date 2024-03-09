@@ -1,15 +1,22 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Transfer};
 use mpl_token_metadata::instructions::{
-    DelegateAuthorityItemV1, DelegateProgrammableConfigItemV1, DelegateTransferV1,
-    RevokeProgrammableConfigItemV1, TransferV1, VerifyCollection,
+    CreateMetadataAccountV3Builder, DelegateAuthorityItemV1, DelegateProgrammableConfigItemV1,
+    DelegateTransferV1, RevokeProgrammableConfigItemV1, TransferV1, VerifyCollection,
 };
 
 use mpl_token_metadata::accounts::{Metadata, MetadataDelegateRecord, TokenRecord};
+//
+use mpl_token_metadata::{
+    errors::MplTokenMetadataError, programs::MPL_TOKEN_METADATA_ID, MAX_NAME_LENGTH,
+    MAX_SYMBOL_LENGTH, MAX_URI_LENGTH,
+};
+
+// use mpl_token_auth_rules::instruction::
 
 use crate::{constants::SEED_OFFER, offer::offer_state::OfferState};
 
-// This module provides functions for transferring tokens
+// make a function to verify the metadata of a collection
 
 // This function describes transfer of a specific amount of tokens from one account to another
 
@@ -99,6 +106,16 @@ pub fn transfer_nft(
     metaplexMetadata: Metadata,
     rcrd: TokenRecord,
 ) -> Result<()> {
+    // how do i transfer an NFT using the metaplex functions.
+
+    // send from one account to another
+
+    // let cpi_accounts = TransferV1{
+    //     from,
+    //     to,
+    //     authority
+    // }
+
     Ok(())
 }
 /// .
@@ -122,18 +139,56 @@ pub fn transfer_token_as_delegate(
     pda: UncheckedAccount,
 ) {
 }
+
 pub fn revoke_delegate_authority_of_nft(
     to: RevokeProgrammableConfigItemV1,
     delegaterecord: MetadataDelegateRecord,
     frr: DelegateProgrammableConfigItemV1,
 ) {
+    // an token authority revokes the previously issued delegate authority
+    // it looks in the metadata delegate record, and deletes the record
 }
 
 // verify collection
+
 pub fn get_collection_details<'a>(
     token: UncheckedAccount<'a>,
     verify_program: VerifyCollection,
     token_program: AccountInfo<'a>,
 ) {
     // retreive details of a collection from its public key
+
+    // get details of a collection
+}
+
+// verify collection
+pub fn verify_collection<'a>(
+    token: UncheckedAccount<'a>,
+    verify_program: VerifyCollection,
+    token_program: AccountInfo<'a>,
+    token_metadata: Metadata,
+    expected_token_metadata: String,
+) {
+    // retreive details of a collection from its public key
+    // add logic to derive metadata from the tokens public key
+
+    // verify using the metaplex verified collections list
+
+    let cpi_accounts = VerifyCollection {
+        metadata: todo!(),
+        collection_authority: todo!(),
+        payer: todo!(),
+        collection_mint: todo!(),
+        collection: todo!(),
+        collection_master_edition_account: todo!(),
+        collection_authority_record: todo!(),
+    };
+
+    if token_metadata.name == expected_token_metadata {
+        // do something
+        // do some asserts
+    }
+
+    // token_metadata.collection_details()
+    // verify_program.metadata()
 }
